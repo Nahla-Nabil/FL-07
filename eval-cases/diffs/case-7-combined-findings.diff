@@ -7,7 +7,7 @@ index 4211f52..b32c642 100644
  DEFAULT_TIMEOUT_SECONDS = 10
  
 +# TODO: move to env before shipping
-+SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
++SLACK_WEBHOOK_URL = "https://internal-notify.example.com/webhooks/9f8e7d6c5b4a3928374659483726154abcdef"
 +
 +
 +def notify_slack(message: str) -> None:

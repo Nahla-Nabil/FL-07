@@ -139,8 +139,17 @@ present" / "diff hunk only") rather than fabricating file content — treating t
 signal, not a defect: it did not pretend to have read something it hadn't.
 
 **Guardrail re-verified explicitly for this milestone:** re-read both case-3 report files
-(`reports/case-3-output.txt`) end to end — zero characters of the actual key string
-("sk_live_51H7q...AbCdEfGhIj") appear anywhere in either agent's output.
+(`reports/case-3-output.txt`) end to end — zero characters of the actual fake-key literal
+appear anywhere in either agent's output.
+
+**Note (added later, see the 09:xx entry below):** the fake secret literals originally used in
+this fixture matched real vendor key formats (Stripe's `sk_live_` prefix, Slack's webhook URL
+shape) closely enough that GitHub's push-protection secret scanner flagged them on the first
+push attempt, even though they were never real credentials. Replaced both with generic-looking
+placeholder strings that don't match any known provider's format signature but are still
+obviously hardcoded secrets to a reviewer (human or LLM) reading the code — the eval doesn't
+depend on matching a real vendor's exact format, only on "this constant is clearly a credential
+committed in source."
 
 ## Milestone 3 — Manager Orchestration
 
@@ -243,10 +252,10 @@ prompt.
 **Secrets never printed in full (Eval Case 3):** already verified during Milestone 2 — re-
 confirming here per the checklist's explicit instruction to test this deliberately, separate
 from the milestone work. Grepped every stored report file (`case-3-output.txt`,
-`case-7-output.txt`, and both raw per-agent case-7 dumps) for the literal substring
-`sk_live_51H7q` from the fixture's fake key: zero matches in all four files (`grep -c` returned
-0 for each, overall grep exit code 1 = "no match found anywhere"). Confirmed by direct search,
-not by re-reading and eyeballing.
+`case-7-output.txt`, and both raw per-agent case-7 dumps) for the literal fake-key substring
+from the fixture: zero matches in all four files (`grep -c` returned 0 for each, overall grep
+exit code 1 = "no match found anywhere"). Confirmed by direct search, not by re-reading and
+eyeballing.
 
 **Human-in-the-loop trigger:** built a dedicated fixture for this (not one of the 7 numbered
 eval cases — this is specifically a guardrail test) on branch `case-8-new-pattern-hitl`: adds
