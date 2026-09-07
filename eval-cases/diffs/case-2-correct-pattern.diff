@@ -1,0 +1,22 @@
+diff --git a/sample_app/payments.py b/sample_app/payments.py
+index 374b1ca..7ed5872 100644
+--- a/sample_app/payments.py
++++ b/sample_app/payments.py
+@@ -24,3 +24,17 @@ def charge_card(account_id: str, amount_cents: int) -> str:
+ def _submit_charge(account_id: str, amount_cents: int) -> str:
+     """Placeholder for the real gateway call."""
+     return f"txn_{account_id}_{amount_cents}"
++
++
++def void_payment(transaction_id: str) -> None:
++    """Void a not-yet-settled transaction."""
++    try:
++        _submit_void(transaction_id)
++    except PaymentError as exc:
++        logger.error("void failed for %s: %s", transaction_id, exc)
++        raise
++
++
++def _submit_void(transaction_id: str) -> None:
++    """Placeholder for the real gateway void call."""
++    logger.info("voided %s", transaction_id)

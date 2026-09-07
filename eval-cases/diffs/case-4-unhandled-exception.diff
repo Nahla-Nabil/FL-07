@@ -1,0 +1,19 @@
+diff --git a/sample_app/payments.py b/sample_app/payments.py
+index 374b1ca..5e6e442 100644
+--- a/sample_app/payments.py
++++ b/sample_app/payments.py
+@@ -24,3 +24,14 @@ def charge_card(account_id: str, amount_cents: int) -> str:
+ def _submit_charge(account_id: str, amount_cents: int) -> str:
+     """Placeholder for the real gateway call."""
+     return f"txn_{account_id}_{amount_cents}"
++
++
++def handle_webhook_event(payload: dict) -> str:
++    """Entry point for inbound payment-provider webhook events."""
++    account_id = payload["data"]["account_id"]
++    amount_cents = payload["data"]["amount_cents"]
++    fee_cents = payload["data"]["fee_cents"]
++    net_cents = amount_cents - fee_cents
++    split_count = payload["data"]["split_count"]
++    per_split_cents = net_cents // split_count
++    return charge_card(account_id, per_split_cents)

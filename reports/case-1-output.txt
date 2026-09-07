@@ -1,0 +1,1 @@
+ERROR: diff file not found: eval-cases/diffs/case-1-pattern-violation.diff

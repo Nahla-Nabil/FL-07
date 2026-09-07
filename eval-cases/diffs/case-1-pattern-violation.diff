@@ -1,0 +1,21 @@
+diff --git a/sample_app/payments.py b/sample_app/payments.py
+index 374b1ca..e23bb04 100644
+--- a/sample_app/payments.py
++++ b/sample_app/payments.py
+@@ -24,3 +24,16 @@ def charge_card(account_id: str, amount_cents: int) -> str:
+ def _submit_charge(account_id: str, amount_cents: int) -> str:
+     """Placeholder for the real gateway call."""
+     return f"txn_{account_id}_{amount_cents}"
++
++
++def refund_payment(transaction_id, amount_cents):
++    try:
++        result = _submit_refund(transaction_id, amount_cents)
++        return result
++    except:
++        pass
++
++
++def _submit_refund(transaction_id: str, amount_cents: int) -> str:
++    """Placeholder for the real gateway refund call."""
++    return f"refund_{transaction_id}_{amount_cents}"

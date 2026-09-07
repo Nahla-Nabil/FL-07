@@ -1,0 +1,24 @@
+diff --git a/sample_app/api_client.py b/sample_app/api_client.py
+index 4211f52..a6e3071 100644
+--- a/sample_app/api_client.py
++++ b/sample_app/api_client.py
+@@ -24,3 +24,19 @@ def fetch_user(user_id: str) -> dict:
+         logger.error("failed to fetch user %s: %s", user_id, exc)
+         raise
+     return response.json()
++
++
++def fetch_invoice(invoice_id: str) -> dict:
++    """Fetch a single invoice record from the billing provider."""
++    api_key = os.environ["BILLING_API_KEY"]
++    try:
++        response = requests.get(
++            f"https://api.billing.example.com/invoices/{invoice_id}",
++            headers={"Authorization": f"Bearer {api_key}"},
++            timeout=DEFAULT_TIMEOUT_SECONDS,
++        )
++        response.raise_for_status()
++    except requests.RequestException as exc:
++        logger.error("failed to fetch invoice %s: %s", invoice_id, exc)
++        raise
++    return response.json()

@@ -1,0 +1,22 @@
+diff --git a/sample_app/api_client.py b/sample_app/api_client.py
+index 4211f52..b32c642 100644
+--- a/sample_app/api_client.py
++++ b/sample_app/api_client.py
+@@ -9,6 +9,17 @@ logger = logging.getLogger(__name__)
+ 
+ DEFAULT_TIMEOUT_SECONDS = 10
+ 
++# TODO: move to env before shipping
++SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
++
++
++def notify_slack(message: str) -> None:
++    print(f"notifying slack: {message}")
++    try:
++        requests.post(SLACK_WEBHOOK_URL, json={"text": message}, timeout=DEFAULT_TIMEOUT_SECONDS)
++    except:
++        pass
++
+ 
+ def fetch_user(user_id: str) -> dict:
+     """Fetch a user record from the billing provider."""
