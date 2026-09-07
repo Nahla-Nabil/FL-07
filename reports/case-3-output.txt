@@ -1,0 +1,10 @@
+## Security & Bug Review
+
+Files reviewed: sample_app/api_client.py (diff only, full file not available in this environment)
+
+### Findings
+- [HIGH] sample_app/api_client.py:13 — SECRET: Hardcoded Stripe live secret key assigned to a module-level constant (`STRIPE_SECRET_KEY`).
+- [MEDIUM] sample_app/api_client.py:32-40 — UNHANDLED_EXCEPTION: The new `fetch_stripe_balance()` function has no try/except, unlike the adjacent `fetch_user()` in the same file which wraps its request. `requests.get(...)` can raise `requests.exceptions.ConnectionError` or `requests.exceptions.Timeout`, and `response.raise_for_status()` can raise `requests.exceptions.HTTPError` on non-2xx responses (e.g. Stripe returning 401 for a bad/rotated key) — none of these are caught anywhere in this function or elsewhere in the file, so they will propagate to the caller unhandled. Severity is MEDIUM rather than HIGH because this is an outbound call to Stripe, not a handler directly fed by external/untrusted input, based on what's visible in this diff.
+
+### NEEDS HUMAN INPUT
+None.

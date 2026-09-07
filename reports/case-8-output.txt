@@ -1,0 +1,10 @@
+## Convention Review
+
+Files reviewed: sample_app/api_client.py
+Conventions checked: CONVENTIONS.md (8 entries)
+
+### Findings
+No convention violations found in this diff. The new `fetch_user_async` function has a docstring (#6), type hints on parameters and return value (#5), snake_case naming (#4), no bare except/print/mutable defaults/hardcoded secrets (#1, #2, #3, #7).
+
+### NEEDS HUMAN INPUT
+- sample_app/api_client.py:13-15 — The diff introduces `AsyncClientPool`, an async client-pool pattern not used anywhere else in the codebase, and its import isn't visible in this diff. Convention #8 requires explicit `timeout=` on outbound HTTP calls, but here `timeout=DEFAULT_TIMEOUT_SECONDS` is passed to `AsyncClientPool.acquire(...)`, not to the actual `client.get(...)` request. It's unclear whether the pool's acquire-timeout also bounds the HTTP request itself (satisfying #8) or is a separate concept (pool checkout timeout only, leaving the HTTP call unbounded). Since this is a new architectural pattern not covered by any existing CONVENTIONS.md entry, a human should confirm (a) whether `AsyncClientPool` is an approved addition to the codebase and (b) whether it actually enforces a request-level timeout as convention #8 intends.

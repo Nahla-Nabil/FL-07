@@ -1,0 +1,11 @@
+## Security & Bug Review
+
+Files reviewed: sample_app/payments.py (diff hunk only — file not present in current working directory, review based on provided diff content)
+
+### Findings
+- [HIGH] sample_app/payments.py:29-33 — UNHANDLED_EXCEPTION: `handle_webhook_event` indexes directly into the untrusted webhook `payload` dict (`payload["data"]["account_id"]`, `["amount_cents"]`, `["fee_cents"]`, `["split_count"]`) with no try/except in the diff or surrounding file; a `KeyError` will be raised and propagate uncaught if `payload` lacks a `"data"` key or any of those sub-keys, or a `TypeError` if `payload["data"]` is not a dict/mapping (e.g., `None` or a list).
+- [HIGH] sample_app/payments.py:32 — UNHANDLED_EXCEPTION: `per_split_cents = net_cents // split_count` will raise `ZeroDivisionError` if the webhook-supplied `split_count` is `0`, and nothing in the function or file catches it; this is directly reachable from external webhook input.
+- [HIGH] sample_app/payments.py:31 — UNHANDLED_EXCEPTION: `net_cents = amount_cents - fee_cents` will raise `TypeError` if `amount_cents` or `fee_cents` from the webhook payload are non-numeric (e.g., strings, `None`), again with no exception handling in the call chain.
+
+### NEEDS HUMAN INPUT
+(none)

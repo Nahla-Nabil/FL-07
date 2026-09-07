@@ -25,7 +25,7 @@ if [ -z "$DIFF_CONTENT" ]; then
   exit 1
 fi
 
-PROMPT="Review the following diff against this repository's CONVENTIONS.md. Read CONVENTIONS.md in full with your Read tool before judging anything, then produce the report in the exact format your instructions describe.
+PROMPT="Review the following diff per your own instructions, and produce the report in the exact format they describe.
 
 --- BEGIN DIFF ($DIFF_FILE) ---
 $DIFF_CONTENT
@@ -33,4 +33,6 @@ $DIFF_CONTENT
 
 # --allowedTools is belt-and-suspenders on top of the agent's own frontmatter tools: list —
 # both layers deny Edit/Write/Bash so there is no write/commit/push path even by accident.
-claude -p --agent "$AGENT" --allowedTools "Read Grep Glob" "$PROMPT"
+# NOTE: the prompt must come immediately after -p / before --allowedTools — that flag is
+# variadic and will swallow a trailing positional prompt argument if it comes after it.
+claude -p "$PROMPT" --agent "$AGENT" --allowedTools "Read,Grep,Glob"

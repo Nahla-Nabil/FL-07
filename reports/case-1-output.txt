@@ -1,1 +1,12 @@
-ERROR: diff file not found: eval-cases/diffs/case-1-pattern-violation.diff
+## Convention Review
+
+Files reviewed: sample_app/payments.py
+Conventions checked: CONVENTIONS.md (8 entries)
+
+### Findings
+- [HIGH] sample_app/payments.py:33 — Convention #1 (No bare `except:`): `refund_payment` uses a bare `except:` followed by `pass`, silently swallowing all errors (including `KeyboardInterrupt`/`SystemExit`) instead of catching a specific exception and handling or re-raising it.
+- [LOW] sample_app/payments.py:29 — Convention #5 (Type hints on public functions): `refund_payment` is a public function (no leading underscore) but its parameters `transaction_id`, `amount_cents` and return value have no type hints.
+- [LOW] sample_app/payments.py:29 — Convention #6 (Docstrings on public functions/classes): `refund_payment` is public but has no docstring, unlike `_submit_refund` below it which does.
+
+### NEEDS HUMAN INPUT
+(none)

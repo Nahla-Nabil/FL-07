@@ -1,0 +1,12 @@
+## Convention Review
+
+Files reviewed: sample_app/api_client.py
+Conventions checked: CONVENTIONS.md (8 entries)
+
+### Findings
+- [HIGH] sample_app/api_client.py:13 — Convention #3 (Never hardcode secrets): hardcoded credential assigned to a module-level constant.
+- [HIGH] sample_app/api_client.py:20 — Convention #1 (No bare `except:`): bare `except:` combined with `pass` silently swallows all errors, including `KeyboardInterrupt`/`SystemExit`.
+- [MEDIUM] sample_app/api_client.py:17 — Convention #2 (No `print()` for diagnostics): `notify_slack` uses `print()` instead of the module `logger`.
+- [LOW] sample_app/api_client.py:16 — Convention #6 (Docstrings on public functions): `notify_slack` is a public function (no leading underscore) with no docstring.
+
+No violations found for Convention #4 (naming), #5 (type hints — present), #7 (mutable defaults), or #8 (timeout — `timeout=DEFAULT_TIMEOUT_SECONDS` is correctly passed on the `requests.post` call).

@@ -1,0 +1,18 @@
+diff --git a/sample_app/api_client.py b/sample_app/api_client.py
+index 4211f52..d4feea6 100644
+--- a/sample_app/api_client.py
++++ b/sample_app/api_client.py
+@@ -10,6 +10,13 @@ logger = logging.getLogger(__name__)
+ DEFAULT_TIMEOUT_SECONDS = 10
+ 
+ 
++async def fetch_user_async(user_id: str) -> dict:
++    """Fetch a user record from the billing provider using the new async client pool."""
++    async with AsyncClientPool.acquire(timeout=DEFAULT_TIMEOUT_SECONDS) as client:
++        response = await client.get(f"/users/{user_id}")
++        return response.json()
++
++
+ def fetch_user(user_id: str) -> dict:
+     """Fetch a user record from the billing provider."""
+     api_key = os.environ["BILLING_API_KEY"]

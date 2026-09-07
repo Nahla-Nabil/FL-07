@@ -1,0 +1,9 @@
+## Convention Review
+
+Files reviewed: sample_app/api_client.py
+Conventions checked: CONVENTIONS.md (8 entries)
+
+### Findings
+No convention violations found in this diff.
+
+The added `fetch_invoice` function mirrors the existing `fetch_user` pattern: specific exception handling with re-raise (#1), `logger.error` instead of `print` (#2), API key sourced from `os.environ` (#3), `snake_case` naming (#4), full type hints (#5), a one-line docstring (#6), no mutable default args (#7), and an explicit `timeout=DEFAULT_TIMEOUT_SECONDS` on the `requests.get` call (#8).

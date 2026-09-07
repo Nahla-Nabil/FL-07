@@ -1,0 +1,8 @@
+## Security & Bug Review
+
+Files reviewed: sample_app/api_client.py
+
+### Findings
+- [HIGH] sample_app/api_client.py:13 — SECRET: Hardcoded Slack webhook URL assigned to the module-level constant `SLACK_WEBHOOK_URL`.
+
+No unhandled-exception issues found in this diff — the new `requests.post` call in `notify_slack` (line 19) is wrapped in a bare `try/except` that suppresses all exceptions, so it does not introduce a new crash path.

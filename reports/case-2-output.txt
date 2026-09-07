@@ -1,0 +1,9 @@
+## Convention Review
+
+Files reviewed: sample_app/payments.py
+Conventions checked: CONVENTIONS.md (8 entries)
+
+### Findings
+No convention violations found in this diff.
+
+The added `void_payment` function mirrors the existing `charge_card` pattern: it has type hints on parameters and return value and a one-line docstring (Convention #5, #6), catches the specific `PaymentError` exception and re-raises after logging rather than swallowing it (Convention #1), uses `logger.error` instead of `print()` (Convention #2), and follows `snake_case` naming with a leading underscore for the private helper (Convention #4). No secrets, mutable default arguments, or outbound HTTP calls are introduced.

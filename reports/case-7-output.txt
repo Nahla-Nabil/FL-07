@@ -1,0 +1,14 @@
+## Combined Code Review Report
+Diff: eval-cases/diffs/case-7-combined-findings.diff
+Agents run: convention-reviewer, security-bug-reviewer
+Findings per agent: convention-reviewer=4, security-bug-reviewer=1
+
+### Findings (merged, severity-ordered)
+- [HIGH] (convention-reviewer) sample_app/api_client.py:13 — Convention #3 (Never hardcode secrets): hardcoded credential assigned to a module-level constant.
+- [HIGH] (convention-reviewer) sample_app/api_client.py:20 — Convention #1 (No bare `except:`): bare `except: pass` in `notify_slack` silently swallows all errors, including `KeyboardInterrupt`/`SystemExit`.
+- [HIGH] (security-bug-reviewer) sample_app/api_client.py:13 — SECRET: Hardcoded Slack webhook URL (with embedded workspace/bot/token path segments) assigned to a module-level constant `SLACK_WEBHOOK_URL`, rather than being loaded from an environment variable or secrets manager.
+- [MEDIUM] (convention-reviewer) sample_app/api_client.py:17 — Convention #2 (No `print()` for diagnostics): `notify_slack` uses `print()` instead of the module `logger`.
+- [LOW] (convention-reviewer) sample_app/api_client.py:16 — Convention #6 (Docstrings on public functions): `notify_slack` is a public function (no leading underscore) but has no docstring.
+
+### NEEDS HUMAN INPUT (merged)
+(none)
