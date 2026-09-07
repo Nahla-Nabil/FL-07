@@ -1,0 +1,15 @@
+## Combined Code Review Report
+Diff: eval-cases/diffs/case-1-pattern-violation.diff
+Agents run: convention-reviewer, typo-agent-does-not-exist
+Findings per agent: convention-reviewer=3, typo-agent-does-not-exist=0
+
+### Manager Warnings (reported, not swallowed)
+- typo-agent-does-not-exist exited 1: --agent 'typo-agent-does-not-exist' not found. Available agents: academic-research-skills:report_compiler_agent, academic-research-skills:research_architect_agent, academic-research-skills:synthesis_agent, claude, claude-code-guide, convention-reviewer, Explore, general-purpose, Plan, security-bug-reviewer, statusline-setup
+
+### Findings (merged, severity-ordered)
+- [HIGH] (convention-reviewer) sample_app/payments.py:31 — Convention #1 (No bare `except:`): `refund_payment` uses a bare `except: pass`, silently swallowing all errors including `KeyboardInterrupt`/`SystemExit`.
+- [LOW] (convention-reviewer) sample_app/payments.py:28 — Convention #5 (Type hints on public functions): `refund_payment(transaction_id, amount_cents)` is not prefixed with `_` but has no parameter or return type hints.
+- [LOW] (convention-reviewer) sample_app/payments.py:28 — Convention #6 (Docstrings on public functions): `refund_payment` has no docstring.
+
+### NEEDS HUMAN INPUT (merged)
+(none)
