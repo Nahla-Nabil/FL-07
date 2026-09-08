@@ -46,6 +46,11 @@ Note: `CONVENTIONS.md` is never piped into the prompt by the runner scripts; eac
 - Human-in-the-loop trigger: a deliberate-looking new pattern the agent cannot resolve from the current conventions list goes under a `NEEDS HUMAN INPUT` heading as a pause-and-ask, not a silent approve/reject (exercised by `case-8-new-pattern-hitl.diff` / `reports/case-8-output.txt`).
 - Failure reporting: a missing diff exits 1 with `ERROR: diff file not found: ...`, an empty diff exits 1 refusing to fabricate a report, and manager failures surface verbatim under `Manager Warnings (reported, not swallowed)` without erasing the working agent's findings.
 
+## Known Limitations
+
+- Line-number citation reliability: re-running the same diff through the same agent does not always cite the same line number for a finding. A fresh consistency check against case-3 and case-4 found real disagreements (not just wording) where each run got some line citations right and others wrong, with no single run being uniformly more accurate. This is a genuine reliability limitation of LLM-based line citation, not a bug that was fixed; the saved reports in `reports/` are kept as the frozen, documented snapshot rather than the "best" run.
+- Scope-adherence drift: `security-bug-reviewer`'s instructions explicitly say to ignore issues outside its two categories (secrets and unhandled exceptions). A fresh run on case-7 once surfaced a bare-except pattern under `NEEDS HUMAN INPUT` anyway, explicitly noting it was out of scope. The saved report does not show this. Documented here as an observed one-off drift, not corrected by re-running.
+
 ## Example output
 
 Real content of `reports/case-7-output.txt`, verbatim:

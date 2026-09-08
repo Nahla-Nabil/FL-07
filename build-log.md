@@ -386,3 +386,45 @@ didn't get treated as "0 findings = all clear" — the warning makes the partial
 Reverted `AGENTS` back to `["convention-reviewer", "security-bug-reviewer"]` immediately after
 and confirmed the file matches that again. This is the actual Milestone-3 risk case, not just a
 symmetric "both fail" or "both succeed" check, and it holds up.
+
+### 2026-09-09 02:42 — Finalization pass: fresh consistency check against the frozen reports
+
+Re-ran all 7 eval cases fresh (cases 1/2/3/4/5/8 via `scripts/review.sh`, case 7 via
+`scripts/manager.py`) and diffed each against its saved report in `reports/`, per the user's
+explicit "tell me before touching anything else, do not silently overwrite a saved report"
+instruction. Cases 1, 2, 5, 8 came back consistent — same findings, same severities, same HITL
+behavior, differences only in paraphrase. Two real (not cosmetic) disagreements surfaced:
+
+**Line-number citation reliability (case-3, case-4).** Hand-checked the actual line numbers
+against each diff's own `@@` hunk header math. In case-3, the saved report correctly cites line
+13 for `STRIPE_SECRET_KEY` and lines 32-40 for the full `fetch_stripe_balance` function; the
+fresh run got both wrong (`:12`, the comment line above the secret; `:37-40`, missing the actual
+`requests.get` call). In case-4, it went the other way: the saved report cites `:32` and `:31`
+for the ZeroDivisionError and TypeError findings, both wrong (line 32 is `amount_cents =`, line
+31 is `account_id =`; the actual division is on line 36); the fresh run correctly cited `:36`.
+Neither run is uniformly more reliable — each got some citations right and others wrong on
+different runs. This is a genuine limitation of LLM-based line-number citation across
+non-deterministic re-runs, not something a prompt tweak trivially fixes, and not something to
+paper over by re-running until a "clean" pass appears. Per the user's decision: the saved
+reports stay frozen as the official record (they match the screenshots and the recording), and
+this limitation is documented in `README.md` under "Known Limitations" instead of being
+"corrected."
+
+**Scope-adherence drift (case-7).** The fresh manager run's `security-bug-reviewer` output
+included a `NEEDS HUMAN INPUT` entry about the bare-`except: pass` pattern in `notify_slack`,
+explicitly prefacing it with "this falls outside my two review categories, but flagging..." —
+directly contradicting its own written instruction ("Do not comment on naming, docstrings, type
+hints, or logging style... If you notice something like that, ignore it."). The saved report
+does not have this entry (`NEEDS HUMAN INPUT (merged): (none)`), which is the instruction-
+compliant behavior. Recording this as an observed one-off drift in the frozen record, not
+fixing it by re-running until it goes away — the value of documenting it is knowing the failure
+mode exists, not hiding it behind a lucky re-run.
+
+Per the user's decision, no file under `reports/` was modified. Both findings are now written
+into `README.md`'s "Known Limitations" section (added between "Guardrails" and "Example
+output") in the same terms as here.
+
+Also removed the untracked `.codex/` directory in this same pass — a set of Codex-CLI-format
+(`.toml`) mirrors of the two subagent personas that had been added outside this conversation.
+Per the user: a different platform than the one justified in FL-06 (`.claude/agents/*.md`,
+Claude Code), out of scope for this submission. Confirmed removed via `git status`.
