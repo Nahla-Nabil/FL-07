@@ -428,3 +428,46 @@ Also removed the untracked `.codex/` directory in this same pass — a set of Co
 (`.toml`) mirrors of the two subagent personas that had been added outside this conversation.
 Per the user: a different platform than the one justified in FL-06 (`.claude/agents/*.md`,
 Claude Code), out of scope for this submission. Confirmed removed via `git status`.
+
+### 2026-09-09 03:38 — First look at the actual FL-06 spec PDF, cross-checked against the build
+
+The user shared `FL-06_Code_Review_Agent_Spec.pdf` for the first time this session — everything
+up to now had been built against the FL-07 build checklist alone, which summarizes the spec but
+doesn't quote it. Worth reading in full and reconciling, prompted by the user asking "where's
+n8n / where's the agent in this" after seeing the manager output looked like plain text rather
+than a visual workflow.
+
+**n8n: a non-issue, resolved by directly quoting the spec back.** Section 9 ("Platform Choice
+and Justification") explicitly considers and rejects n8n: *"The alternative considered was n8n:
+strong for scheduled, fixed-sequence workflows... but it cannot reason over code semantics or
+coordinate a manager-and-sub-agent handoff the way this job needs... Claude Code."* So n8n was
+never supposed to be part of this build — the user's own spec already made this call. Confirmed
+by grepping this repo's own docs for "n8n": zero mentions anywhere, consistent with it never
+having been part of the plan.
+
+**Cross-checked the rest of the spec against what's actually built:**
+- Section 3 (Architecture) and Section 8 (Risks and Guardrails) match what was built almost
+  line for line: manager + two sub-agents, merged severity-ordered report labeling which agent
+  raised each finding, the "never auto-commit/push/edit" rule, "never print a secret's full
+  value" rule, "never let the manager silently drop a sub-agent's findings" rule, and the
+  Convention-Agent-specific human-in-the-loop trigger for diffs that look like an intentional
+  evolution of a convention. All of these were independently built and tested (Milestones 1-3,
+  Guardrail Verification) before ever having seen this document's exact wording — it lines up
+  because the FL-07 checklist that was actually followed is a faithful summary of it.
+- One real, previously undocumented gap found: **severity label vocabulary.** Section 6 (Draft
+  Instructions) and Section 7 (Eval Cases) both specify `Critical / Should Fix / Suggestion`.
+  Every agent instruction, the manager's sort order, and all 9 saved reports in this repo use
+  `HIGH / MEDIUM / LOW` instead. Functionally identical (same three-level ordering, same
+  purpose), just different words. Per the user's decision: document this as a deviation rather
+  than rename and re-run everything, since every eval case, screenshot, and the recording
+  already use `HIGH/MEDIUM/LOW` and the labels carry no behavioral difference. Added to
+  `README.md`'s "Deviations from the FL-06 spec" section.
+- Confirmed the already-documented deviations line up with the spec's actual text too: Section 1
+  names the real target (FastAPI To-Do API, A1-A4) and Section 4 specifies pgvector as the
+  Convention Agent's retrieval mechanism from the start (not an optional stretch in FL-06
+  itself) — the "optional, deferrable" framing came from the FL-07 checklist, which explicitly
+  states the flat-file version satisfies its own spec-compliance check regardless. Section 3
+  also frames the manager as "Claude Code... calls the Convention Compliance Agent and the
+  Security & Bug Agent as tools," i.e. an LLM-driven orchestrator, not necessarily the
+  deterministic Python script this build uses — already covered by the existing "non-LLM
+  manager" deviation entry, now grounded in the spec's exact words instead of a paraphrase.

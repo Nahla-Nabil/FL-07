@@ -80,6 +80,7 @@ Full detail for each is in `build-log.md`; summaries:
 - Synthetic fixtures instead of a real A4 branch: no real A4 branch existed in this folder, so `sample_app/`, `CONVENTIONS.md`, and the `eval-cases/diffs/` fixtures were generated here from scratch.
 - Non-LLM manager: `scripts/manager.py` merges by deterministic regex parse-and-sort with a loud `Manager Warnings` section, so one agent's output cannot silently disappear the way an LLM summarize-and-merge step could drop it.
 - Milestone 4 pgvector deferral: deferred, not attempted — with 8 short conventions entries, reading the whole file every run is faster and more reliable than retrieval, which would add embedding/retrieval failure surface for no accuracy or latency benefit at this size.
+- Severity label naming: the FL-06 spec calls for `Critical / Should Fix / Suggestion`; this build uses `HIGH / MEDIUM / LOW` throughout (agent instructions, manager sort order, and every saved report). Same three-level ordering and purpose, different vocabulary — not reconciled, since every eval case, screenshot, and the recording already use the `HIGH/MEDIUM/LOW` labels and changing them now would mean re-running and re-capturing everything for a naming difference with no behavioral effect.
 
 ## Screenshots
 
