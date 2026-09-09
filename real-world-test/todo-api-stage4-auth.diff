@@ -1,0 +1,170 @@
+commit 4abcd042aa74796fe2c03500edff919a5367a2a8
+Author: Nahla Nabil <nahla.nabil.52@gmail.com>
+Date:   Fri Aug 14 22:21:02 2026 +0300
+
+    Stage 4: auth middleware and logout endpoint
+
+diff --git a/auth.py b/auth.py
+index db7f13b..7a398c3 100644
+--- a/auth.py
++++ b/auth.py
+@@ -12,6 +12,8 @@ concurrent request.
+ import os
+ 
+ from dotenv import load_dotenv
++from fastapi import Security
++from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+ from supabase import Client, create_client
+ 
+ load_dotenv()
+@@ -19,6 +21,35 @@ load_dotenv()
+ SUPABASE_URL = os.environ["SUPABASE_URL"]
+ SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+ 
++# auto_error=False so a missing/malformed Authorization header lands in
++# require_user() as credentials=None instead of FastAPI's generic 403 —
++# that's what lets us return the exact 401 bodies the spec asks for. Using
++# this scheme as a dependency is also what makes the Swagger "Authorize"
++# padlock appear on protected routes for free (Stage 5).
++bearer_scheme = HTTPBearer(auto_error=False)
++
++
++class AuthError(Exception):
++    """Carries a status code and message straight through to the handler
++    registered in main.py, so every auth failure responds with
++    {"error": "..."} instead of FastAPI's default {"detail": "..."}."""
++
++    def __init__(self, status_code: int, message: str):
++        self.status_code = status_code
++        self.message = message
++
++
++class AuthedUser:
++    """What require_user() hands to a route: the verified user's safe
++    metadata plus the raw token, since /auth/logout needs the token again
++    to ask Supabase to revoke the session."""
++
++    def __init__(self, id: str, email: str | None, created_at: str | None, token: str):
++        self.id = id
++        self.email = email
++        self.created_at = created_at
++        self.token = token
++
+ 
+ def get_client() -> Client:
+     """A fresh Supabase client per call — see the module docstring."""
+@@ -44,3 +75,46 @@ def get_user(token: str):
+     """Asks Supabase whether `token` is real — a network call, so the
+     answer is trustworthy (unlike just decoding the JWT locally)."""
+     return get_client().auth.get_user(token)
++
++
++def sign_out(token: str) -> None:
++    """Best-effort sign-out. The SDK's sign_out() reads session state off
++    the client object, which we don't have from just a bearer token — so
++    this builds a throwaway client and primes it with set_session() first.
++
++    Either way, the access token itself stays valid until it naturally
++    expires (JWTs are stateless — nothing server-side can un-sign them).
++    This only revokes the refresh token / session, which is why the route
++    calling this still returns 204 even if the Supabase call fails: the
++    token was already verified valid before we got here.
++    """
++    client = get_client()
++    client.auth.set_session(token, token)
++    client.auth.sign_out()
++
++
++def require_user(
++    credentials: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
++) -> AuthedUser:
++    """The reusable guard. Apply as Depends(require_user) to any route that
++    should only answer for a logged-in user — written once here, reused by
++    /protected/profile, /protected/dashboard, and /auth/logout.
++    """
++    if credentials is None or not credentials.credentials:
++        raise AuthError(401, "Access token required")
++
++    token = credentials.credentials
++    try:
++        user = get_user(token).user
++    except Exception:
++        user = None
++
++    if user is None:
++        raise AuthError(401, "Invalid or expired token")
++
++    return AuthedUser(
++        id=user.id,
++        email=user.email,
++        created_at=str(user.created_at) if user.created_at else None,
++        token=token,
++    )
+diff --git a/main.py b/main.py
+index 94c34e6..b8f2d52 100644
+--- a/main.py
++++ b/main.py
+@@ -1,10 +1,11 @@
+-from fastapi import FastAPI, HTTPException, Request
++from fastapi import Depends, FastAPI, HTTPException, Request, Response
+ from fastapi.responses import JSONResponse
+ from pydantic import BaseModel
+ 
+ import auth
+ import cache
+ import db
++from auth import AuthedUser, AuthError
+ 
+ app = FastAPI()
+ db.init_db()
+@@ -12,6 +13,11 @@ cache.ping_with_retry()
+ auth.ping()
+ 
+ 
++@app.exception_handler(AuthError)
++def handle_auth_error(request: Request, exc: AuthError):
++    return JSONResponse(status_code=exc.status_code, content={"error": exc.message})
++
++
+ class TaskCreate(BaseModel):
+     title: str
+ 
+@@ -128,22 +134,24 @@ def login(body: LoginRequest):
+         "token_type": "bearer",
+     }
+ 
++@app.post("/auth/logout", status_code=204)
++def logout(user: AuthedUser = Depends(auth.require_user)):
++    try:
++        auth.sign_out(user.token)
++    except Exception:
++        pass  # best-effort revoke — see auth.sign_out()'s docstring
++    return Response(status_code=204)
++
+ @app.get("/public/info")
+ def public_info():
+     return {"message": "Welcome stranger! This info is public."}
+ 
+ @app.get("/protected/profile")
+-def profile(request: Request):
+-    authorization = request.headers.get("Authorization")
+-    scheme, _, token = (authorization or "").partition(" ")
+-    if scheme.lower() != "bearer" or not token:
+-        return JSONResponse(status_code=401, content={"error": "Access token required"})
+-
+-    try:
+-        user = auth.get_user(token).user
+-    except Exception:
+-        user = None
+-    if user is None:
+-        return JSONResponse(status_code=401, content={"error": "Invalid or expired token"})
+-
+-    return {"id": user.id, "email": user.email, "created_at": str(user.created_at)}
++def profile(user: AuthedUser = Depends(auth.require_user)):
++    return {"id": user.id, "email": user.email, "created_at": user.created_at}
++
++@app.get("/protected/dashboard")
++def dashboard(user: AuthedUser = Depends(auth.require_user)):
++    # A second route on the same guard, written with zero new auth code —
++    # that reuse is the whole point of Stage 4.
++    return {"message": f"Welcome back, {user.email}!"}

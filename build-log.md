@@ -471,3 +471,57 @@ having been part of the plan.
   Security & Bug Agent as tools," i.e. an LLM-driven orchestrator, not necessarily the
   deterministic Python script this build uses — already covered by the existing "non-LLM
   manager" deviation entry, now grounded in the spec's exact words instead of a paraphrase.
+
+### 2026-09-09 03:57 — Real-world validation against the actual todo-api project
+
+The user asked to test the agents on real code, not just the synthetic fixtures, and pointed me
+at her Desktop to find it myself. Found `C:\Users\nahla\Desktop\todo-api` — the actual FastAPI
+To-Do API the FL-06 spec is written about (confirmed by grepping it: real `AuthError` class,
+real "fresh Supabase client per call" docstring, matching the spec's Section 1 almost verbatim).
+
+**Flagged, not touched:** that repo is currently mid-`git rebase` (`rebase --continue` pending
+on top of `ebccb08`), with a stale `worktree-agent-...` branch and a leftover
+`.claude/worktrees/agent-a61de1b502dfc3cb7/` directory from what looks like an old, unrelated,
+never-cleaned-up agent session. Did not touch, continue, or abort anything there — told the user
+it exists and to deal with it separately. Everything done for this real-world test was read-only
+against that repo (`git show`/`git diff`), which doesn't touch rebase state.
+
+**Picked a real commit:** `4abcd042 "Stage 4: auth middleware and logout endpoint"` — 97 real
+lines across `auth.py`/`main.py`. Exported via `git show 4abcd04 -- auth.py main.py` into this
+repo as `real-world-test/todo-api-stage4-auth.diff`. Chose this commit specifically because it's
+where `AuthError` and the auth middleware get introduced — the part of her real project the spec
+actually references.
+
+**Wrote two new CONVENTIONS.md entries (9-10) from the real code, not from memory or the spec's
+prose.** Read `auth.py`'s module docstring, `db.py`, and `cache.py` before writing anything —
+confirmed the fresh-client-per-call pattern is consistent across all three files (not just
+asserted in one docstring), and confirmed the exact `AuthError(401, ...)` raise sites with
+`grep`. Deliberately did NOT add a "401 vs 403" entry even though the FL-06 spec's Section 2 eval
+case describes one (case 2: "returns 401 for missing token and 403 for valid-but-unauthorized
+token") — grepped the entire current codebase for `403` and found only a comment referencing
+FastAPI's *default* 403 (the thing `auto_error=False` exists to avoid), no actual `403` being
+raised anywhere. Not going to write a convention entry asserting a pattern I can't find evidence
+of in the actual code, even though the spec describes it — that stage of her project may not be
+reached yet, or may live in a route this diff doesn't touch. Kept entries 9-10 in a clearly
+labeled separate section of `CONVENTIONS.md` rather than renumbering/mixing them into 1-8, since
+those are for this repo's own `sample_app/`, not `todo-api`.
+
+**Ran `python scripts/manager.py real-world-test/todo-api-stage4-auth.diff`** — the exact same
+unmodified agents and manager used for every other eval case, no special-casing. Result:
+`security-bug-reviewer` found nothing (correct call — no secrets, no unhandled-exception path in
+this diff). `convention-reviewer` found 8 real issues: a `MEDIUM` on a genuine
+`except Exception: pass` in the new `logout()` route (no logging at all), and 7 `LOW` findings
+(missing docstrings/return-type-hints across `handle_auth_error`, `logout`, `profile`,
+`dashboard`). Hand-verified every single one against the actual file with `sed -n` — all 8
+checked out accurate, no hallucinated line or fabricated issue. Neither new project-specific
+convention (#9 fresh-client, #10 AuthError) was flagged, correctly, since this commit follows
+both.
+
+**One nuance worth recording honestly:** the flagged `except Exception: pass` in `logout()` has
+an inline comment — `# best-effort revoke — see auth.sign_out()'s docstring` — meaning the
+author (the user) made that choice on purpose. The agent has no way to know that from the diff
+text alone and correctly flagged the literal pattern against Convention #1 as written. This
+isn't a false positive so much as a real example of exactly what the spec's Section 1 says the
+output should be: "a report, not an automatic fix... Nahla stays the one who decides what
+changes." Saved report and this reasoning are now both in `README.md` under "Real-world
+validation."

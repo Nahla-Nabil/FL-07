@@ -82,6 +82,14 @@ Full detail for each is in `build-log.md`; summaries:
 - Milestone 4 pgvector deferral: deferred, not attempted — with 8 short conventions entries, reading the whole file every run is faster and more reliable than retrieval, which would add embedding/retrieval failure surface for no accuracy or latency benefit at this size.
 - Severity label naming: the FL-06 spec calls for `Critical / Should Fix / Suggestion`; this build uses `HIGH / MEDIUM / LOW` throughout (agent instructions, manager sort order, and every saved report). Same three-level ordering and purpose, different vocabulary — not reconciled, since every eval case, screenshot, and the recording already use the `HIGH/MEDIUM/LOW` labels and changing them now would mean re-running and re-capturing everything for a naming difference with no behavioral effect.
 
+## Real-world validation (beyond the graded eval cases)
+
+The eval cases above use synthetic fixtures (see the deviation above) since no real A4 branch existed in this folder. As an extra check — not required for the graded submission — the same unmodified agents and manager were run against a genuine diff from Nahla's actual FastAPI To-Do API project (the one the FL-06 spec is written about): commit `Stage 4: auth middleware and logout endpoint` (`auth.py` + `main.py`, 97 real lines changed).
+
+Two conventions were added to `CONVENTIONS.md` (entries 9-10, in their own labeled section) written from what that project's real code actually does — fresh-Supabase/Postgres/Redis-client-per-call, and the custom `AuthError(status_code, message)` pattern — so the test checks against real conventions, not an invented approximation.
+
+Result (`real-world-test/todo-api-stage4-auth-report.txt`): `security-bug-reviewer` found nothing (correct — no secrets, no unhandled path in this diff); `convention-reviewer` found 8 real issues, all spot-checked against the actual file and confirmed accurate — a genuine `except Exception: pass` in the new `logout()` route with no logging (Convention #1), and missing docstrings/return-type-hints on 4 new/changed route functions (Conventions #5-6). Neither of the two new project-specific conventions (#9 fresh-client-per-call, #10 `AuthError`) was flagged — correctly, since that commit follows both. One nuance worth stating plainly: the flagged `except Exception: pass` in `logout()` carries a comment marking it as an intentional "best-effort revoke," a design choice the code's author made on purpose — the agent has no way to know that from the diff alone and correctly flagged the literal pattern per the written convention; a human (Nahla) reading the report is the one who decides whether that's a real fix or an accepted tradeoff, which is exactly the "report, not auto-fix, human decides" behavior the spec asks for.
+
 ## Screenshots
 
 ![](docs/screenshots/01-single-agent-violation.png)

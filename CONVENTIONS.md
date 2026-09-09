@@ -30,3 +30,25 @@ things that have actually caused bugs or review comments, not aspirational rules
 
 8. **Explicit timeouts on outbound HTTP calls.** Any `requests.*` (or similar) call must pass
    `timeout=`. A hung dependency should not be able to hang this service forever.
+
+## Real-project conventions (from `todo-api`, added for the FL-06 real-world validation pass)
+
+Entries 1-8 above are for this repo's own `sample_app/`. The two below come from Nahla's actual
+FastAPI To-Do API project (referenced in the FL-06 spec) and were added only to run the agents
+against a real diff from that project, not synthetic fixtures — see `real-world-test/` and
+`build-log.md`. Written from what the real code (`auth.py`, `db.py`, `cache.py`) actually does,
+not from memory or the spec's prose.
+
+9. **Fresh client per call, never one shared global.** `get_client()`/`get_connection()` in
+   `auth.py`/`db.py`/`cache.py` each open a new Supabase/Postgres/Redis client on every call
+   instead of a module-level singleton. For the Supabase client specifically this isn't just
+   style: the SDK's `sign_in`/`sign_out` calls store session state on the client object itself,
+   so one shared client would leak one user's session into another user's concurrent request.
+
+10. **Auth failures raise `AuthError(status_code, message)`, never a raw exception or a bare
+    `HTTPException`.** `auth.py` defines `AuthError` so every auth failure reaches the handler
+    registered in `main.py` and responds with a consistent `{"error": "..."}` body instead of
+    FastAPI's default `{"detail": "..."}` shape. `HTTPBearer(auto_error=False)` is used
+    specifically so a missing/malformed `Authorization` header lands in `require_user()` as
+    `credentials=None` — handled explicitly and raised as `AuthError(401, ...)` — rather than
+    FastAPI's own generic 403.

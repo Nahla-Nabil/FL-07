@@ -1,0 +1,17 @@
+## Combined Code Review Report
+Diff: real-world-test/todo-api-stage4-auth.diff
+Agents run: convention-reviewer, security-bug-reviewer
+Findings per agent: convention-reviewer=8, security-bug-reviewer=0
+
+### Findings (merged, severity-ordered)
+- [MEDIUM] (convention-reviewer) main.py:141-142 — Convention #1 (No bare `except:`): `except Exception: pass` in `logout()` silently discards any error from `auth.sign_out()` with no logging at all, matching the exact banned pattern named in the convention (the code comment references intent, but nothing is logged or surfaced).
+- [LOW] (convention-reviewer) main.py:18 — Convention #6 (Docstrings): new `handle_auth_error` exception handler has no docstring.
+- [LOW] (convention-reviewer) main.py:138 — Convention #6 (Docstrings): new `logout` route handler has no docstring.
+- [LOW] (convention-reviewer) main.py:154 — Convention #6 (Docstrings): new `dashboard` route handler has no docstring (only an inline comment, which isn't a docstring).
+- [LOW] (convention-reviewer) main.py:18 — Convention #5 (Type hints): `handle_auth_error` has parameter hints but no return type hint.
+- [LOW] (convention-reviewer) main.py:138 — Convention #5 (Type hints): `logout` has no return type hint (returns `Response`).
+- [LOW] (convention-reviewer) main.py:150 — Convention #5 (Type hints): `profile` (rewritten in this diff) has no return type hint.
+- [LOW] (convention-reviewer) main.py:154 — Convention #5 (Type hints): `dashboard` has no return type hint.
+
+### NEEDS HUMAN INPUT (merged)
+(none)
