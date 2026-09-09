@@ -95,7 +95,7 @@ Partial-failure run showing a Manager Warning without losing the working agent's
 
 ## Screen Recording
 
-[Screen recording link to be added]
+[~2-minute raw demo: a real diff going in, the manager running both agents, the merged report coming out](https://drive.google.com/file/d/11dtLrj18_8eO-GZqiFVnxthM2sG6aumk/view?usp=sharing)
 
 ## Build log
 
